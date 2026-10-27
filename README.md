@@ -1,6 +1,6 @@
 any2ns2
 -
-Usage: any2ns2 <sourcedir> <portdir> <iconpath> <apptitle> [appdescription] [build]
+Usage: any2ns2 {sourcedir} {portdir} {iconpath} {apptitle} [appdescription] [build]
 -
 Use a PNG icon. Quote arguments containing spaces.
 ---
