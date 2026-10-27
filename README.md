@@ -1,3 +1,8 @@
+any2ns2
+-
+Usage: any2ns2 <sourcedir> <portdir> <iconpath> <apptitle> [appdescription] [build]
+-
+Use a PNG icon. Quote arguments containing spaces.
 ---
 Any2NS2 standalone project bundle
 ---
