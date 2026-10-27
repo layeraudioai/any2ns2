@@ -250,17 +250,12 @@ int main(int argc, char** argv) {
     }
     std::string appTitle = argv[4];
     std::string appDescription = "Any2NS2 scaffold; source behavior is not translated.";
-    bool doBuild = false;
+    bool doBuild = true;
     if (appTitle.empty()) { std::cerr << "any2ns2: apptitle must not be empty\n"; return 2; }
-    if (argc == 6) {
-        if (std::string(argv[5]) == "build") doBuild = true;
-        else appDescription = argv[5];
-    } else if (argc == 7) {
-        appDescription = argv[5];
-        if (std::string(argv[6]) != "build") {
-            std::cerr << "any2ns2: final argument must be 'build'\n"; return 2;
+    if (argc >= 6) {
+        if (std::string(argv[5]) != "build") {
+            appDescription = argv[5];
         }
-        doBuild = true;
     }
     if (appDescription.empty()) appDescription = "Any2NS2 scaffold; source behavior is not translated.";
     try {
@@ -305,9 +300,13 @@ int main(int argc, char** argv) {
         writeEmbeddedAssets(output);
         write(output / "build.cjs", buildScript());
         write(output / "app.json", "{\n  \"format\": \"hblauncher.gpu-app\",\n  \"abi\": 1,\n  \"id\": \"" + jsonEscape(id) + "\",\n  \"name\": \"" + jsonEscape(display) + "\",\n  \"version\": \"1.0.0\",\n  \"description\": \"" + jsonEscape(appDescription) + "\",\n  \"icon\": \"assets/icon.png\",\n  \"initialState\": \"assets/state.bin\",\n  \"data\": \"assets/text.bin\",\n  \"shaders\": {\"vertex\": \"app.vert.spv\", \"fragment\": \"app.frag.spv\", \"compute\": \"app.comp.spv\"}\n}\n");
-        std::error_code copyError;
-        fs::copy_file(icon, output / "assets/icon.png", fs::copy_options::overwrite_existing, copyError);
-        if (copyError) throw std::runtime_error("cannot copy iconpath to output assets/icon.png: " + copyError.message());
+        std::string pyIconCmd = "python -c \"from PIL import Image; im = Image.open(r'" + icon.string() + "'); im.thumbnail((512, 512)); im.save(r'" + (output / "assets/icon.png").string() + "', 'PNG')\"";
+        int iconRes = std::system(pyIconCmd.c_str());
+        if (iconRes != 0) {
+            std::error_code copyError;
+            fs::copy_file(icon, output / "assets/icon.png", fs::copy_options::overwrite_existing, copyError);
+            if (copyError) throw std::runtime_error("cannot copy iconpath to output assets/icon.png: " + copyError.message());
+        }
         fs::copy_file(output / "apps/hello-world/assets/text.bin", output / "assets/text.bin", fs::copy_options::overwrite_existing);
         fs::remove_all(output / "apps");
         std::vector<unsigned char> state(1024, 0); state[0] = 'A'; state[1] = '2'; state[2] = 'N'; state[3] = 'S';
