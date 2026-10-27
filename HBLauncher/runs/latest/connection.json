@@ -1,0 +1,18 @@
+{
+  "port": 57073,
+  "token": "133c553c7db5944654dac86e7546459fb71a4099a7d94a180126862baccff6cc",
+  "addresses": {
+    "scratch": 474186523520,
+    "scratchBytes": 524288,
+    "main": 246992097280,
+    "sdk": 247355068416,
+    "got": 247002358512,
+    "memmove": 247360865008,
+    "backing": 474050725088,
+    "controller": 474050725200,
+    "platform": 2,
+    "sdkCrc32": 3925528160,
+    "session": "latest",
+    "target": "switch2"
+  }
+}

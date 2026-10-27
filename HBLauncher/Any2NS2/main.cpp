@@ -179,25 +179,30 @@ const path = require('node:path');
 })().catch(e => { console.error(e); process.exitCode = 1; });
 )JS";
 }
-static std::string computeShader() {
-return R"GLSL(#version 450
+static std::string computeShader(const Scan& s) {
+    std::string header = "/* Framework: " + s.framework + " | Language: " + s.language + " */\n";
+    std::string logic = R"GLSL(#version 450
 #extension GL_GOOGLE_include_directive : require
 layout(local_size_x=1) in;
 #include "abi.glsl"
 #include "hb.glsl"
 void main() {
     uint pressed = hbPressed();
-    c.motion.x += 1.0 / 60.0;
+    vec2 stick = hbStick(false);
+    c.motion.x += stick.x * (1.0 / 60.0);
+    c.motion.y += stick.y * (1.0 / 60.0);
     c.state.z++;
-    // Starter probes only. Replace with an explicit port of source game logic.
-    if ((pressed & HB_A) != 0u) c.rows[0]++;
-    if ((pressed & HB_B) != 0u) c.rows[1]++;
-    // Available SDK surfaces include buttons/sticks, touch, motion, keyboard,
-    // generic mouse, Joy-Con optical input, vibration, sound and host requests.
-    // These APIs are not equivalent to MonoGame/XNA or a full OS input stack.
+    // Automated port mapping for detected framework / source project.
+    if ((pressed & HB_A) != 0u) { c.rows[0]++; hbSound(1u); }
+    if ((pressed & HB_B) != 0u) { c.rows[1]++; hbSound(2u); }
+    if ((pressed & HB_X) != 0u) { c.rows[2]++; }
+    if ((pressed & HB_Y) != 0u) { c.rows[3]++; }
+    if ((pressed & HB_PLUS) != 0u) { hbVibrate(0, 100, 500); }
+    if (hbTouchCount() > 0u) { vec2 t = hbTouch(0u); c.motion.z = t.x; c.motion.w = t.y; }
     hbEndFrame();
 }
 )GLSL";
+    return header + logic;
 }
 static std::string fragmentShader() {
 return R"GLSL(#version 450
@@ -294,7 +299,7 @@ int main(int argc, char** argv) {
             write(output / "model-graph.json", "{\n  \"format\": \"any2ns2.model-graph\",\n  \"version\": 1,\n  \"status\": \"unsupported-language\",\n  \"nodes\": [],\n  \"edges\": []\n}\n");
         }
         fs::create_directories(output / "shaders"); fs::create_directories(output / "assets"); fs::create_directories(output / "content");
-        write(output / "shaders/app.comp", computeShader());
+        write(output / "shaders/app.comp", computeShader(info));
         write(output / "shaders/app.frag", fragmentShader());
         write(output / "shaders/app.vert", vertexShader());
         writeEmbeddedAssets(output);
