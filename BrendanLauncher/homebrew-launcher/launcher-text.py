@@ -7,7 +7,7 @@ atlas = Image.new('L', (1024, 2048))
 draw = ImageDraw.Draw(atlas)
 font = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 labels = [
-    ('TITLE', 'HBLauncher', 88),
+    ('TITLE', 'BrendanLauncher', 88),
     ('SUBTITLE', 'V 1.0.0', 24),
     ('PLATFORM', 'N I N T E N D O   S W I T C H   2', 16),
     ('LIBRARY', 'Your library', 26),
