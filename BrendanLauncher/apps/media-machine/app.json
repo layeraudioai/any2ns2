@@ -1,0 +1,24 @@
+{
+  "format": "hblauncher.gpu-app",
+  "abi": 1,
+  "id": "media-machine",
+  "name": "Media Machine",
+  "version": "1.0.0",
+  "description": "Switch 2 Media & YouTube Streaming Engine (BrendanLauncher)",
+  "transition": "fade",
+  "shaders": {
+    "vertex": "shaders/app.vert.spv",
+    "fragment": "shaders/app.frag.spv",
+    "compute": "shaders/app.comp.spv"
+  },
+  "initialState": "assets/initial-state.bin",
+  "data": "assets/data.bin",
+  "icon": "assets/icon.png",
+  "sdk": {
+    "version": 1,
+    "capabilities": [
+      "media",
+      "streaming"
+    ]
+  }
+}

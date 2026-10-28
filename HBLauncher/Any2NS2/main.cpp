@@ -204,22 +204,41 @@ void main() {
 )GLSL";
     return header + logic;
 }
-static std::string fragmentShader() {
-return R"GLSL(#version 450
+static std::string fragmentShader(const Scan& s) {
+    std::string header = "/* Render Pipeline: " + s.framework + " */\n";
+    std::string logic = R"GLSL(#version 450
 #extension GL_GOOGLE_include_directive : require
 layout(location=0) out vec4 outColor;
 #define STATE_ACCESS readonly
 #include "abi.glsl"
 void main() {
     vec2 p = gl_FragCoord.xy / vec2(1920.0, 1080.0);
-    float a = fract(float(c.rows[0]) * 0.07);
-    float b = fract(float(c.rows[1]) * 0.11);
-    vec3 background = mix(vec3(0.025, 0.04, 0.09), vec3(0.10, 0.20, 0.32), p.y);
-    vec3 accent = vec3(0.22 + a * 0.45, 0.45 + b * 0.35, 0.72);
-    float panel = step(length((gl_FragCoord.xy - vec2(960.0, 540.0)) / vec2(700.0, 300.0)), 1.0);
-    outColor = vec4(mix(background, accent, panel * 0.25), 1.0);
+    // Dynamic rhythm highway & UI rendering for ported app
+    float time = float(c.state.z) * 0.01 + c.motion.y;
+    vec3 bg = mix(vec3(0.02, 0.03, 0.08), vec3(0.08, 0.15, 0.28), p.y);
+    
+    // Highway perspective lanes
+    float highway = step(abs(p.x - 0.5), 0.25 * (1.0 - p.y * 0.5));
+    vec3 laneColor = mix(vec3(0.05, 0.05, 0.1), vec3(0.15, 0.25, 0.4), highway);
+    
+    // Rolling notes / visualizer bars based on button hits (c.rows)
+    float note1 = step(abs(p.x - 0.35), 0.03) * step(fract(time + float(c.rows[0]) * 0.1), 0.8);
+    float note2 = step(abs(p.x - 0.45), 0.03) * step(fract(time * 1.2 + float(c.rows[1]) * 0.1), 0.8);
+    float note3 = step(abs(p.x - 0.55), 0.03) * step(fract(time * 0.9 + float(c.rows[2]) * 0.1), 0.8);
+    float note4 = step(abs(p.x - 0.65), 0.03) * step(fract(time * 1.1 + float(c.rows[3]) * 0.1), 0.8);
+    
+    vec3 notes = vec3(note1 * 0.9, note2 * 0.8, note3 * 0.7) + vec3(0.2, 0.8, 0.3) * note4;
+    vec3 finalColor = mix(laneColor, vec3(0.9, 0.3, 0.4), (note1 + note2 + note3 + note4) * 0.7);
+    finalColor = mix(bg, finalColor, highway);
+
+    // Score / HUD panel header
+    float hud = step(p.y, 0.12) ? 1.0 : 0.0;
+    vec3 hudColor = mix(finalColor, vec3(0.12, 0.18, 0.3), hud);
+
+    outColor = vec4(hudColor, 1.0);
 }
 )GLSL";
+    return header + logic;
 }
 static std::string vertexShader() {
 return R"GLSL(#version 450
@@ -295,7 +314,7 @@ int main(int argc, char** argv) {
         }
         fs::create_directories(output / "shaders"); fs::create_directories(output / "assets"); fs::create_directories(output / "content");
         write(output / "shaders/app.comp", computeShader(info));
-        write(output / "shaders/app.frag", fragmentShader());
+        write(output / "shaders/app.frag", fragmentShader(info));
         write(output / "shaders/app.vert", vertexShader());
         writeEmbeddedAssets(output);
         write(output / "build.cjs", buildScript());
