@@ -23,8 +23,8 @@ for /f "usebackq" %%p in (`powershell -NoProfile -Command "$sec = Read-Host -Pro
 echo PIN entered: ****
 
 echo.
-echo [SETUP] Building and verifying IZLauncher apps and assets...
-node -e "console.log('[OK] IZLauncher build environment verified.');"
+echo [SETUP] Building and publishing IZLauncher modules (.izm packages)...
+node -e "const {publish} = require('./IZ2S-Platform/sdk/publish-modules.cjs'); publish('./IZ2S-Platform').then(r => console.log('[OK] Published modules:', r.updated)).catch(console.error);"
 
 echo.
 echo Starting IZLauncher server...

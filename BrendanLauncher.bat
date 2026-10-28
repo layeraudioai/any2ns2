@@ -23,8 +23,8 @@ for /f "usebackq" %%p in (`powershell -NoProfile -Command "$sec = Read-Host -Pro
 echo PIN entered: ****
 
 echo.
-echo [SETUP] Building and verifying BrendanLauncher apps and assets...
-node -e "console.log('[OK] BrendanLauncher build environment verified.');"
+echo [SETUP] Building and publishing BrendanLauncher modules (.izm packages)...
+node -e "const {publish} = require('./BrendanLauncher/sdk/publish-modules.cjs'); publish('./BrendanLauncher').then(r => console.log('[OK] Published modules:', r.updated)).catch(console.error);"
 
 echo.
 echo Starting BrendanLauncher server...

@@ -87,6 +87,17 @@ async function main() {
   await fs.rm(directory, { recursive: true, force: true });
   await fs.mkdir(directory, { recursive: true });
 
+  console.log('[SETUP] Publishing and verifying IZLauncher modules (.izm packages)...');
+  try {
+    const publication = await require('./sdk/publish-modules.cjs').publish(__dirname);
+    console.log('[SETUP] Published modules:', publication.updated);
+    for (const error of publication.errors) {
+      console.error('Module source not published:', error.id, error.error);
+    }
+  } catch (err) {
+    console.warn('[SETUP] Module publication warning:', err.message);
+  }
+
   let native, bridge;
   try {
     const connected = await listen({
