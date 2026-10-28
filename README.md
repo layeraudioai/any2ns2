@@ -1,3 +1,11 @@
+IZLauncher Windows Footage:
+
+
+https://github.com/user-attachments/assets/5eb2cc0a-e529-4bbe-b355-3cb88d918ba0
+
+
+
+
 any2ns2
 -
 Usage: any2ns2 {sourcedir} {portdir} {iconpath} {apptitle} [appdescription] [build] [--framework IZLauncher]
