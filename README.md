@@ -20,3 +20,7 @@ The small HBLauncher/sdk, scripts and hello-world asset folders are included bec
 Makefile uses them to regenerate its embedded assets; runtime use does not require them.
 --
 ns2jb and switch1scanmodswitch2s are being used also.
+IZLauncher also
+--
+https://github.com/mhzsajan/ns2jb
+https://github.com/byizmysh/IZ2S-Platform
