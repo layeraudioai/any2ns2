@@ -32,3 +32,4 @@ IZLauncher also
 --
 https://github.com/mhzsajan/ns2jb
 https://github.com/byizmysh/IZ2S-Platform
+https://github.com/ravensclawx/HBLauncher
