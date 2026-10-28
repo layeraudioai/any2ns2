@@ -1,8 +1,8 @@
 @echo off
 cls
 echo ==========================================================
-echo  BrendanLauncher - Unified Switch 2 Homebrew Launcher
-echo  Supports HBLauncher Apps & IZ2S Modules/Shells
+echo  BrendanLauncher - Unified Switch 2 Hybrid Launcher
+echo  IZLauncher, HBLauncher, and SPHAIRA Architecture Suite
 echo ==========================================================
 echo.
 echo Open SmileBasic 4 on Nintendo Switch 2, type the following into DIRECT mode with your ns2jb project loaded:

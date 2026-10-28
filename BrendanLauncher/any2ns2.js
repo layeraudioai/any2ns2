@@ -5,7 +5,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const USAGE = `Usage: node any2ns2.js <sourcedir> <portdir> <iconpath> <apptitle> [appdescription] [--framework hblauncher|izlauncher] [--build]`;
+const USAGE = `Usage: node any2ns2.js <sourcedir> <portdir> <iconpath> <apptitle> [appdescription] [--framework hblauncher|izlauncher|sphaira] [--build]`;
 
 function parseArgs(argv) {
     let sourcedir, portdir, iconpath, apptitle, appdescription;
@@ -35,8 +35,8 @@ function parseArgs(argv) {
     apptitle = positional[3];
     appdescription = positional[4] || 'Ported with Any2NS2 & BrendanLauncher';
 
-    if (!['hblauncher', 'izlauncher'].includes(framework)) {
-        throw new Error('Invalid framework. Choose either "hblauncher" or "izlauncher".');
+    if (!['hblauncher', 'izlauncher', 'sphaira'].includes(framework)) {
+        throw new Error('Invalid framework. Choose "hblauncher", "izlauncher", or "sphaira".');
     }
 
     return { sourcedir, portdir, iconpath, apptitle, appdescription, framework, build };
@@ -155,6 +155,31 @@ async function main() {
         await fs.writeFile(path.join(opts.portdir, 'app.json'), JSON.stringify(manifest, null, 2) + '\n');
         await fs.writeFile(path.join(opts.portdir, 'PORTING.md'), `# Porting Report: ${opts.apptitle}\n\n- Framework: ${scan.framework}\n- Language: ${scan.language}\n- Target: HBLauncher\n`);
         console.log(`[Any2NS2] Successfully generated HBLauncher port at: ${opts.portdir}`);
+    } else if (opts.framework === 'sphaira') {
+        // SPHAIRA Immersive Rendering & Audio App format
+        await fs.mkdir(path.join(opts.portdir, 'shaders'), { recursive: true });
+        const manifest = {
+            format: "sphaira.gpu-app",
+            abi: 1,
+            id: slug || "ported-app",
+            name: opts.apptitle,
+            version: "1.0.0",
+            description: opts.appdescription,
+            transition: "fade",
+            shaders: {
+                vertex: "shaders/app.vert.spv",
+                fragment: "shaders/app.frag.spv",
+                compute: "shaders/app.comp.spv",
+                text: "shaders/text.spv"
+            },
+            initialState: "assets/initial-state.bin",
+            data: "assets/data.bin",
+            icon: "assets/icon.png",
+            sdk: { version: 1, capabilities: ["any2ns2-port", "sphaira-rendering"] }
+        };
+        await fs.writeFile(path.join(opts.portdir, 'app.json'), JSON.stringify(manifest, null, 2) + '\n');
+        await fs.writeFile(path.join(opts.portdir, 'PORTING.md'), `# Porting Report: ${opts.apptitle}\n\n- Framework: ${scan.framework}\n- Language: ${scan.language}\n- Target: SPHAIRA Engine\n`);
+        console.log(`[Any2NS2] Successfully generated SPHAIRA port at: ${opts.portdir}`);
     } else {
         // IZLauncher / IZ2S Module format
         await fs.mkdir(path.join(opts.portdir, 'switch'), { recursive: true });
@@ -218,18 +243,18 @@ async function main() {
     }
 
     if (opts.build) {
-        if (opts.framework === 'hblauncher') {
-            console.log('[Any2NS2] Triggering HBLauncher build (compiling shaders and initializing state)...');
+        if (opts.framework === 'hblauncher' || opts.framework === 'sphaira') {
+            console.log(`[Any2NS2] Triggering ${opts.framework.toUpperCase()} build (compiling shaders and initializing state)...`);
             try {
                 const buildSdk = require('./sdk/build.cjs');
                 await buildSdk.buildApp(opts.portdir);
             } catch (err) {
-                console.warn('[Any2NS2] Warning during HBLauncher shader build:', err.message);
+                console.warn('[Any2NS2] Warning during shader build:', err.message);
             }
             const state = Buffer.alloc(1024);
             await fs.writeFile(path.join(opts.portdir, 'assets/initial-state.bin'), state).catch(() => {});
             await fs.writeFile(path.join(opts.portdir, 'assets/data.bin'), Buffer.alloc(0)).catch(() => {});
-            console.log('[Any2NS2] HBLauncher build completed.');
+            console.log(`[Any2NS2] ${opts.framework.toUpperCase()} build completed.`);
         } else {
             console.log('[Any2NS2] Triggering IZLauncher build (packing .izm archive)...');
             try {

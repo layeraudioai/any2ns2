@@ -74,7 +74,7 @@ async function main() {
   
   console.log('==================================================');
   console.log(' BrendanLauncher Unified Switch 2 Server & Panel');
-  console.log(' Supports HBLauncher Apps & IZ2S Modules/Shells');
+  console.log(' IZLauncher, HBLauncher, & SPHAIRA Hybrid Suite');
   console.log('==================================================');
   console.log(`Host IP: ${host}`);
   console.log(`Port: 39380`);
