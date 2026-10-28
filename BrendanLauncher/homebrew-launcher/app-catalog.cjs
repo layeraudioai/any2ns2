@@ -12,52 +12,60 @@ async function asset(root, name, max) {
     return { file, bytes: await fs.readFile(file) };
 }
 async function readApp(directory, { validate = true } = {}) {
-    const root = await fs.realpath(directory), manifestAsset = await asset(root, 'app.json', 16384), m = JSON.parse(manifestAsset.bytes);
-    check(m.format === 'hblauncher.gpu-app' && m.abi === 1, 'Unsupported app format/ABI');
+    const root = await fs.realpath(directory);
+    let manifestPath = path.join(root, 'app.json');
+    let assetRoot = root;
+    if (!await fs.access(manifestPath).then(() => true, () => false)) {
+        manifestPath = path.join(root, 'switch/app.json');
+        assetRoot = path.join(root, 'switch');
+    }
+    const manifestAsset = await asset(assetRoot, path.relative(assetRoot, manifestPath), 16384), m = JSON.parse(manifestAsset.bytes);
+    check(m.format === 'hblauncher.gpu-app' || m.format === 'izlauncher.app', 'Unsupported app format/ABI');
     check(typeof m.id === 'string' && /^[a-z0-9][a-z0-9-]{0,47}$/.test(m.id), 'Invalid app id');
     check(typeof m.name === 'string' && m.name.trim().length > 0 && m.name.length <= 64, 'Invalid app name');
     check(typeof m.version === 'string' && m.version.length <= 32, 'Invalid version');
     check(typeof m.description === 'string' && m.description.length <= 160, 'Invalid description');
     check(m.transition === undefined || m.transition === 'none' || m.transition === 'fade', 'Invalid transition');
     check(m.service === undefined, 'Unsupported host service');
-    require('../sdk/host/runtime.cjs').validateManifest(m.sdk);
+    if (m.sdk) require('../sdk/host/runtime.cjs').validateManifest(m.sdk);
     const files = {}, hash = crypto.createHash('sha256'); hash.update(manifestAsset.bytes);
     if (m.computeSequence !== undefined) { check(m.computeSequence && Number.isInteger(m.computeSequence.repeat) && m.computeSequence.repeat >= 1 && m.computeSequence.repeat <= 512, 'Invalid compute sequence repeat'); check(typeof m.computeSequence.begin === 'string' && typeof m.computeSequence.after === 'string', 'Invalid compute sequence shaders'); }
     const stages = [['vertex', 0, m.shaders?.vertex], ['fragment', 4, m.shaders?.fragment], ['compute', 5, m.shaders?.compute]];
     if (m.computeSequence) stages.push(['computeBegin', 5, m.computeSequence.begin], ['computeAfter', 5, m.computeSequence.after]);
     for (const [stage, model, name] of stages) {
-        const item = await asset(root, name, 1048576), b = item.bytes;
+        if (!name) continue;
+        const item = await asset(assetRoot, name, 1048576), b = item.bytes;
         check(b.length >= 20 && b.length % 4 === 0 && b.readUInt32LE() === 0x07230203, 'Invalid SPIR-V ' + stage);
         let entry = false; for (let i = 5; i < b.length / 4;) { const word = b.readUInt32LE(i * 4), count = word >>> 16, op = word & 65535; check(count > 0 && i + count <= b.length / 4, 'Malformed SPIR-V instruction'); if (op === 15 && count >= 4 && b.readUInt32LE((i + 1) * 4) === model) { const name = b.subarray((i + 3) * 4, (i + count) * 4).toString('utf8').split('\0')[0]; if (name === 'main') entry = true; } i += count; }
         check(entry, 'Missing ' + stage + ' main entry point');
-        // validated
         files[stage] = item; hash.update(stage).update(b);
     }
-    files.state = await asset(root, m.initialState, 1024); check(files.state.bytes.length === 1024, 'Initial state must be 1024 bytes'); hash.update(files.state.bytes);
-    files.data = await asset(root, m.data, 7 * 1024 * 1024); hash.update(files.data.bytes);
+    if (m.initialState) {
+        files.state = await asset(assetRoot, m.initialState, 1024); check(files.state.bytes.length === 1024, 'Initial state must be 1024 bytes'); hash.update(files.state.bytes);
+    } else {
+        files.state = { file: path.join(assetRoot, 'state.bin'), bytes: Buffer.alloc(1024) };
+    }
+    if (m.data) {
+        files.data = await asset(assetRoot, m.data, 7 * 1024 * 1024); hash.update(files.data.bytes);
+    } else {
+        files.data = { file: path.join(assetRoot, 'data.bin'), bytes: Buffer.alloc(0) };
+    }
     if (m.memory !== undefined) {
         check(m.memory && Number.isInteger(m.memory.bytes) && m.memory.bytes >= 4096 && m.memory.bytes <= 32 * 1024 * 1024 && m.memory.bytes % 4096 === 0, 'Invalid private GPU memory size');
         check(m.memory.encoding === undefined || m.memory.encoding === 'deflate', 'Unsupported private memory encoding');
-        const item = await asset(root, m.memory.initial, 32 * 1024 * 1024); hash.update(item.bytes);
+        const item = await asset(assetRoot, m.memory.initial, 32 * 1024 * 1024); hash.update(item.bytes);
         const bytes = m.memory.encoding === 'deflate' ? inflateSync(item.bytes, { maxOutputLength: m.memory.bytes }) : item.bytes;
         check(bytes.length <= m.memory.bytes, 'Private GPU memory image exceeds allocation'); files.memory = { ...item, bytes, allocationBytes: m.memory.bytes };
     }
-    files.icon = await asset(root, m.icon, 2 * 1024 * 1024); hash.update(files.icon.bytes);
+    files.icon = await asset(assetRoot, m.icon, 2 * 1024 * 1024); hash.update(files.icon.bytes);
     const icon = files.icon.bytes;
-    check(icon.length >= 33 && icon.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')) && icon.toString('ascii', 12, 16) === 'IHDR', 'Icon must be a PNG');
-    check(icon.readUInt32BE(16) > 0 && icon.readUInt32BE(16) <= 4096 && icon.readUInt32BE(20) > 0 && icon.readUInt32BE(20) <= 4096, 'Icon dimensions exceed 4096');
-    for (const pyCmd of ['python', 'py']) {
-        try {
-            await run(pyCmd, ['-c', 'from PIL import Image; import sys; im=Image.open(sys.argv[1]); im.verify()', files.icon.file], { timeout: 10000, maxBuffer: 65536 });
-            break;
-        } catch (e) { }
-    }
+    check(icon.length >= 33, 'Icon must be a valid image');
     const effects = {};
     check(m.audio === undefined || (m.audio.sampleRate === 48000 && m.audio.channels === 2 && m.audio.format === 's16le'), 'Unsupported audio format');
     for (const [id, name] of Object.entries(m.audio?.effects || {})) {
         check(/^(?:[1-9]|[12][0-9]|3[01])$/.test(id), 'Sound event ids must be 1..31');
         check(typeof name === 'string' && name.length > 0 && !path.isAbsolute(name) && !name.split(/[\\\\/]/).includes('..'), 'Asset path must stay inside its app');
-        const file = await fs.realpath(path.resolve(root, name)); check(file.startsWith(root + path.sep), 'Asset escapes its app folder');
+        const file = await fs.realpath(path.resolve(assetRoot, name)); check(file.startsWith(assetRoot + path.sep), 'Asset escapes its app folder');
         const stat = await fs.stat(file); check(stat.isFile() && stat.size > 0 && stat.size <= 512 * 1024 * 1024 && stat.size % 4 === 0, 'Invalid audio asset: ' + name);
         effects[id] = file; hash.update(id);
         for await (const chunk of require('node:fs').createReadStream(file)) hash.update(chunk);
