@@ -28,19 +28,19 @@ node -e "console.log('[OK] BrendanLauncher build environment verified.');"
 
 echo.
 echo Starting BrendanLauncher server...
-cd BrendanLauncher
+
 :STARTBL
 if "%PIN%"=="" (
     if "%IPPC%"=="" (
-        node server.js
+        node BrendanLauncher\server.js
     ) else (
-        node server.js %IPPC%
+        node BrendanLauncher\server.js %IPPC%
     )
 ) else (
     if "%IPPC%"=="" (
-        node server.js --pin "%PIN%"
+        node BrendanLauncher\server.js --pin "%PIN%"
     ) else (
-        node server.js %IPPC% --pin "%PIN%"
+        node BrendanLauncher\server.js %IPPC% --pin "%PIN%"
     )
 )
 goto :STARTBL
