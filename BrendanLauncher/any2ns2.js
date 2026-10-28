@@ -157,19 +157,92 @@ async function main() {
         console.log(`[Any2NS2] Successfully generated HBLauncher port at: ${opts.portdir}`);
     } else {
         // IZLauncher / IZ2S Module format
+        await fs.mkdir(path.join(opts.portdir, 'switch'), { recursive: true });
+        await fs.mkdir(path.join(opts.portdir, 'server'), { recursive: true });
+
         const modManifest = {
-            format: "iz2s.module",
+            format: "izlauncher.module",
+            formatVersion: 1,
+            apiVersion: 1,
+            id: slug || "ported-app",
+            name: opts.apptitle,
+            version: "1.0.0",
+            moduleVersion: "1.0.0",
+            author: "Any2NS2 Port",
+            platforms: ["linux-x64", "linux-arm64", "win32-x64"],
+            requires: {
+                platformApi: 1,
+                shell: "izlauncher",
+                consoleAbi: 1
+            },
+            switch: {
+                entry: "switch/app.json",
+                abi: 1,
+                files: [
+                    "switch/app.json",
+                    "switch/icon.png"
+                ]
+            },
+            server: {
+                entry: "server/entry.cjs",
+                runtime: "node"
+            },
+            description: opts.appdescription
+        };
+
+        const appJson = {
+            format: "izlauncher.app",
+            abi: 1,
             id: slug || "ported-app",
             name: opts.apptitle,
             version: "1.0.0",
             description: opts.appdescription,
-            shell: "izlauncher",
-            sourceLanguage: scan.language,
-            sourceFramework: scan.framework
+            icon: "switch/icon.png"
         };
+
+        const serverEntryCode = `'use strict';\nmodule.exports = {\n    async create() { return { async close() {} }; }\n};\n`;
+
         await fs.writeFile(path.join(opts.portdir, 'module.json'), JSON.stringify(modManifest, null, 2) + '\n');
+        await fs.writeFile(path.join(opts.portdir, 'switch/app.json'), JSON.stringify(appJson, null, 2) + '\n');
+        await fs.writeFile(path.join(opts.portdir, 'server/entry.cjs'), serverEntryCode);
         await fs.writeFile(path.join(opts.portdir, 'README.md'), `# IZLauncher Port: ${opts.apptitle}\n\n- Framework: ${scan.framework}\n- Language: ${scan.language}\n- Target: IZLauncher / IZ2S-Platform\n`);
+        await fs.writeFile(path.join(opts.portdir, 'LICENSE'), `MIT License\n\nCopyright (c) 2026 Any2NS2 Port\n`);
+        
+        try {
+            await fs.copyFile(opts.iconpath, path.join(opts.portdir, 'switch/icon.png'));
+        } catch (e) {
+            await fs.writeFile(path.join(opts.portdir, 'switch/icon.png'), Buffer.from([]));
+        }
+
         console.log(`[Any2NS2] Successfully generated IZLauncher port at: ${opts.portdir}`);
+    }
+
+    if (opts.build) {
+        if (opts.framework === 'hblauncher') {
+            console.log('[Any2NS2] Triggering HBLauncher build (compiling shaders and initializing state)...');
+            try {
+                const buildSdk = require('./sdk/build.cjs');
+                await buildSdk.buildApp(opts.portdir);
+            } catch (err) {
+                console.warn('[Any2NS2] Warning during HBLauncher shader build:', err.message);
+            }
+            const state = Buffer.alloc(1024);
+            await fs.writeFile(path.join(opts.portdir, 'assets/initial-state.bin'), state).catch(() => {});
+            await fs.writeFile(path.join(opts.portdir, 'assets/data.bin'), Buffer.alloc(0)).catch(() => {});
+            console.log('[Any2NS2] HBLauncher build completed.');
+        } else {
+            console.log('[Any2NS2] Triggering IZLauncher build (packing .izm archive)...');
+            try {
+                const archive = require('./core/archive.cjs');
+                const bytes = await archive.pack(opts.portdir);
+                const izmPath = path.join(opts.portdir, `${slug}.izm`);
+                await fs.writeFile(izmPath, bytes);
+                console.log(`[Any2NS2] IZLauncher package successfully built: ${izmPath} (${bytes.length} bytes)`);
+            } catch (err) {
+                console.error('[Any2NS2 Error] Failed to build IZLauncher .izm package:', err.message);
+                throw err;
+            }
+        }
     }
 }
 

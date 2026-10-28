@@ -86,7 +86,7 @@ async function create({ root, settings: defaults, node, preview = false }) {
     iz = null;
     if (isIZ() && installationReady) {
       if (!loaders.available(choice.loaderId, 'izlauncher'))
-        throw Error('Selected loading method is unavailable for IZlauncher');
+        choice.loaderId = 'izmysh';
       delivery = require('./delivery.cjs').create({
         root,
         id: choice.loaderId,
@@ -307,7 +307,7 @@ async function create({ root, settings: defaults, node, preview = false }) {
           body.loaderSettings || choice.loaderSettings?.[next.loaderId] || {},
         );
         if (!loaders.available(next.loaderId, next.variant)) {
-          if (body.variant === 'izlauncher' && body.loaderId === undefined)
+          if (next.variant === 'izlauncher')
             next.loaderId = 'izmysh';
           else
             throw Error(
