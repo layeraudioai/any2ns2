@@ -1,6 +1,6 @@
 @echo off
-python BrendanLauncher\apps\media-machine-old\assets.py
 cls
+python BrendanLauncher\apps\media-machine-old\assets.py
 echo ==========================================================
 echo  BrendanLauncher - Unified Switch 2 Hybrid Launcher
 echo  IZLauncher, HBLauncher, and SPHAIRA Architecture Suite
