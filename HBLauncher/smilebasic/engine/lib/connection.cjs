@@ -67,7 +67,20 @@ class Connection {
   close() { this.fail(Error('Connection closed')); }
 }
 
-function pairingCode() {
+function pairingCode(customPin) {
+  if (customPin !== undefined && customPin !== null && String(customPin).trim() !== '') {
+    const str = String(customPin).trim();
+    let parts = str.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+    if (parts.length === 4) {
+      return parts;
+    }
+    if (str.length === 4 && /^\d{4}$/.test(str)) {
+      return str.split('').map(Number);
+    }
+    const digits = str.replace(/\D/g, '').split('').map(Number);
+    while (digits.length < 4) digits.push(0);
+    return digits.slice(0, 4);
+  }
   return [0,0,0,0];
 }
 

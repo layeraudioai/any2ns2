@@ -58,8 +58,19 @@ async function main() {
   console.log('[SETUP] Verifying Python and Pillow dependencies for BrendanLauncher...');
   ensurePythonAndPillow();
 
-  const host = await chooseHost(process.argv.slice(2));
-  const token = pairingCode();
+  const rawArgs = process.argv.slice(2);
+  let pinVal = null;
+  const filteredArgs = [];
+  for (let i = 0; i < rawArgs.length; i++) {
+    if (rawArgs[i] === '--pin' && rawArgs[i+1]) {
+      pinVal = rawArgs[++i];
+    } else {
+      filteredArgs.push(rawArgs[i]);
+    }
+  }
+
+  const host = await chooseHost(filteredArgs);
+  const token = pairingCode(pinVal);
   
   console.log('==================================================');
   console.log(' BrendanLauncher Unified Switch 2 Server & Panel');

@@ -22,11 +22,9 @@ node any2ns2.js <sourcedir> <portdir> <iconpath> <apptitle> [appdescription] [--
 - `--framework hblauncher` (default): Generates an HBLauncher GPU app scaffold (`app.json`, shaders, assets).
 - `--framework izlauncher`: Generates an IZLauncher / IZ2S-Platform module scaffold (`module.json`, panel metadata).
 
-## Getting Started
+## Getting Started (BrendanLauncher.bat)
 
-Start the unified server:
-```cmd
-node server.js
-```
-
-Follow the console connection instructions for SmileBASIC on Switch 2.
+Double-click or run **`BrendanLauncher.bat`** from the project root. It will:
+1. Display the SmileBASIC Direct mode commands (`LOAD "TXT:NS2"`, `RUN`, `REMOVE NSR,&60000000,&30000000`).
+2. Prompt for your PC IP address.
+3. Start the unified BrendanLauncher server and output the generated `V=START(...)` command to paste into your NS2JB SmileBasic4 terminal session.
