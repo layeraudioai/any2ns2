@@ -1,11 +1,9 @@
-IZLauncher Windows Footage:
-
-
-https://github.com/user-attachments/assets/5eb2cc0a-e529-4bbe-b355-3cb88d918ba0
-
-
-
-
+BRENDANLAUNCHER
+-
+NIN10$ bought M$ so.........
+-
+<img width="1280" height="720" alt="BrendanLauncher" src="https://github.com/user-attachments/assets/cbd858ad-9839-4fbc-b7d1-3a4b915d1806" />
+-
 any2ns2
 -
 Usage: any2ns2 {sourcedir} {portdir} {iconpath} {apptitle} [appdescription] [build] [--framework IZLauncher]
