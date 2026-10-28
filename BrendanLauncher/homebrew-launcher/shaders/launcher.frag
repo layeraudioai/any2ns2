@@ -26,10 +26,10 @@ void main() {
     vec2 p=gl_FragCoord.xy;
     float t=c.motion.x;
     float crest=wave(p.x,t);
-    vec3 col=vec3(.975,.989,.996);
+    vec3 col=vec3(.04,.06,.05);
     // Three translucent sheets roll behind the main crest at different speeds.
     float sea=1.0-smoothstep(crest-1.0,crest+1.0,p.y);
-    vec3 water=mix(vec3(.02,.40,.77),vec3(.03,.72,.91),clamp(p.x/2300.0+p.y/1500.0,0.0,1.0));
+    vec3 water=mix(vec3(.01,.18,.35),vec3(.02,.55,.78),clamp(p.x/2300.0+p.y/1500.0,0.0,1.0));
     water+=.023*sin(p.x*.003-p.y*.004+t*.17);
     for(int layer=3;layer>0;layer--) {
         float depth=float(layer);
@@ -161,6 +161,8 @@ void main() {
         float cursor=min(stroke(q,vec2(0),vec2(0,28)),min(stroke(q,vec2(0),vec2(22,20)),stroke(q,vec2(0,28),vec2(22,20))));
         col=mix(col,vec3(1),fill(cursor-3.8));col=mix(col,INK,fill(cursor-1.7));
     }
-    col=mix(col,vec3(.38,.52,.60),text(p,vec2(36,1024),TEXT_CREDIT));
+    col=mix(col,vec3(.50,.65,.55),text(p,vec2(36,1024),TEXT_CREDIT));
+    col=mix(col,vec3(.65,.85,.60),text(p,vec2(960.0-float(TEXT_CREDIT_NS2JB.z)*.5,1024),TEXT_CREDIT_NS2JB));
+    col=mix(col,vec3(.46,1.0,.12),text(p,vec2(1920.0-36.0-float(TEXT_CREDIT_IZ.z),1024),TEXT_CREDIT_IZ));
     outColor=vec4(col*(1.0-c.transition.x),1);
 }
