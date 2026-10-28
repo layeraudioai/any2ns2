@@ -14,13 +14,13 @@ else:
     suffix = ""
 
 assets = {
-    "sdk/build.cjs": (root / "sdk/build.cjs").read_text(),
-    "sdk/include/state.glsl": (root / "sdk/include/state.glsl").read_text(),
-    "sdk/include/hb.glsl": (root / "sdk/include/hb.glsl").read_text(),
-    "sdk/include/draw.glsl": (root / "sdk/include/draw.glsl").read_text(),
-    "scripts/toolchain.cjs": (root / "scripts/toolchain.cjs").read_text(),
+    "sdk/build.cjs": (root / "BrendanLauncher/sdk/build.cjs").read_text(),
+    "sdk/include/state.glsl": (root / "BrendanLauncher/sdk/include/state.glsl").read_text(),
+    "sdk/include/hb.glsl": (root / "BrendanLauncher/sdk/include/hb.glsl").read_text(),
+    "sdk/include/draw.glsl": (root / "BrendanLauncher/sdk/include/draw.glsl").read_text(),
+    "scripts/toolchain.cjs": (root / "BrendanLauncher/scripts/toolchain.cjs").read_text(),
     "apps/hello-world/assets/text.bin.base64": base64.b64encode(
-        (root / "apps/hello-world/assets/text.bin").read_bytes()
+        (root / "BrendanLauncher/apps/hello-world/assets/text.bin").read_bytes()
     ).decode("ascii"),
 }
 

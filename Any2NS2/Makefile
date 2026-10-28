@@ -24,7 +24,7 @@ all: $(TARGET)
 test: $(TARGET)
 	$(PYTHON) tests/test_model_analysis.py
 
-$(EMBEDDED): embed_assets.py ../sdk/build.cjs ../sdk/include/state.glsl ../sdk/include/hb.glsl ../sdk/include/draw.glsl ../scripts/toolchain.cjs ../apps/hello-world/assets/text.bin $(addprefix ./,$(SHADER_TOOLS))
+$(EMBEDDED): embed_assets.py ../BrendanLauncher/sdk/build.cjs ../BrendanLauncher/sdk/include/state.glsl ../BrendanLauncher/sdk/include/hb.glsl ../BrendanLauncher/sdk/include/draw.glsl ../BrendanLauncher/scripts/toolchain.cjs ../BrendanLauncher/apps/hello-world/assets/text.bin $(addprefix ./,$(SHADER_TOOLS))
 	$(PYTHON) embed_assets.py $(HBLAUNCHER) $@
 
 $(TARGET): main.cpp model_analyzer.hpp pipeline_analyzer.hpp $(EMBEDDED)
